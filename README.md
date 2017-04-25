@@ -1,3 +1,3 @@
-# NPM Preact Boilerplate
+# Dropbox Gallery
 
-A simple boilerplate to kickstart your preact app with es6 and browser-sync in a slim npm build environment.
+This is a simple webapp that will process a dropbox folder as an image gallery.
