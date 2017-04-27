@@ -2,26 +2,11 @@ import dropbox from 'dropbox'
 import { sortBy as _sortBy } from 'lodash'
 import { join } from 'path'
 
-class Collection {
-
-  constructor(collection) {
-    this.id = collection.id
-    this.name = collection.name
-    this.path_lower = collection.path_lower.replace(/.*\/([^/]+)$/, '$1')
-    this.path_display = collection.path_display.replace(/.*\/([^/]+)$/, '$1')
-    this.entries = collection.entries || []
-  }
-
-  needToFetch() {
-    return (this.entries !== null)
-  }
-}
-
 const filterBy = (key, value) => entries =>
   entries.filter(entry => entry[key] === value)
 
 const sortBy = (key, dir = 'ASC') => entries => {
-  let ordered = _sortBy(entries, key)
+  const ordered = _sortBy(entries, key)
 
   if (dir !== 'ASC') {
     ordered.reverse()
@@ -31,97 +16,63 @@ const sortBy = (key, dir = 'ASC') => entries => {
 
 export class DropboxSource {
 
-  constructor(config = { accessToken: null, basePath: '' }) {
-    let { accessToken, basePath } = config
+  isFetching = false
+  didInvalidate = false
+  entries = []
+
+  get needToFetch() {
+    return ( !this.isFetching || this.didInvalidate )
+  }
+
+  constructor({accessToken, clientId = null, basePath = ''}) {
     if (!accessToken || 'string' !== typeof accessToken) {
       throw new Error('Expected `accessToken` to be string.')
     }
 
-    this.accessToken = accessToken
-    this.basePath = basePath
+    this.dbx = new dropbox({ accessToken, clientId })
+    this.cd(basePath)
+  }
 
-    this.state = {
-      collections: [],
-      isFetching: false,
-      didInvalidate: false
+  cd(newPath) {
+    this.pwd = (newPath.match(/^\/|^$/))
+      ? newPath : join(this.pwd, newPath)
+    this.didInvalidate = true
+    this.entries = []
+  }
+
+  fetch(force = false) {
+    if (force) {
+      this.didInvalidate = true
     }
 
-    this.dbx = new dropbox({ accessToken })
-  }
-
-  findById(id) {
-    return this.state.collections.find(c => c.id === id)
-  }
-
-  findByPath(path) {
-    return this.state.collections.find(c => c.path_lower === path)
-  }
-
-  needToFetchCollections() {
-    return (
-      !this.state.isFetching ||
-      this.state.didInvalidate ||
-      (this.state.collection.length <= 0)
-    )
-  }
-
-  fetchCollections() {
-    return this.dbx.filesListFolder({ path: this.basePath })
-      .then(response => response.entries)
-      .then(filterBy('.tag', 'folder'))
-      .then(sortBy('name', 'ASC'))
-  }
-
-  fetchCollectionsIfNeeded() {
-    if (this.needToFetchCollections()) {
-      return this.fetchCollections()
-        .then(collections => {
-          this.state.collections = collections.map(collection => new Collection(collection))
-          return this.state.collections
-        })
+    if (!this.needToFetch) {
+      return Promise.resolve(this.entries)
     }
 
-    return Promise.resolve(this.state.collections)
+    this.isFetching = true
+    return this.dbx.filesListFolder({ path: this.pwd })
+      .then(response => {
+        this.entries = response.entries
+        this.isFetching = false
+        this.didInvalidate = false
+        return response.entries
+      })
   }
 
-  needToFetchCollection(path) {
-    const index = this.state.collections.findIndex(c => c.path_lower === path)
-
-    return (index === -1 || !this.state.collections[index].entries)
+  listFolders({order = 'ASC'}) {
+    return this.fetch()
+      .then(filterByTag('.tag', 'folder'))
+      .then(sortBy('name', order))
   }
 
-  fetchCollection(path) {
-    return this.dbx.filesListFolder({ path: join(this.basePath, path) })
-      .then(response => response.entries)
+  listFiles({order = 'ASC', filter}) {
+    if ('function' !== typeof filter) {
+      filter = entry => entry
+    }
+    return this.fetch()
       .then(filterBy('.tag', 'file'))
-      .then(sortBy('name', 'ASC'))
-  }
-
-  fetchCollectionIfNeeded(path) {
-    if (this.needToFetchCollection(path)) {
-      return this.fetchCollection(path)
-        .then(collection => {
-          const index = this.state.collections
-            .findIndex(c => c.id === collection.id)
-
-          if (index > -1) {
-            this.state.collections = [
-              this.state.collections.slice(0, index),
-              new Collection(collection),
-              this.state.collections.slice(index + 1)
-            ]
-          } else {
-            this.state.collections = [
-              ...this.state.collections,
-              new Collection(collection)
-            ]
-          }
-
-          return collection
-        })
-    }
-
-    return Promise.resolve(this.findByPath(path))
+      .then(entries => entries.filter(filter))
+      .then(sortBy(order))
   }
 }
 

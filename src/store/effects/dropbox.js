@@ -8,28 +8,22 @@ export const dropboxEffects = (store, action) => {
   switch (action.type) {
 
     case 'INIT':
-      const { accessToken, basePath } = action.payload
-      dropboxSource = new DropboxSource({ accessToken, basePath })
-      store.dispatch(actions.fetchCollections())
+      const { accessToken, clientId, basePath } = action.payload
+      dropboxSource = new DropboxSource({ accessToken, clientId })
       break
 
-    case 'FETCH_COLLECTIONS':
-      dropboxSource.fetchCollectionsIfNeeded()
-        .then(collections =>
-          store.dispatch(actions.receiveCollections(collections))
-        )
-      break
-    
     case 'FETCH_COLLECTION':
       const path = action.payload
-      dropboxSource.fetchCollectionIfNeeded(path)
-        .then(collections => {
-          console.log(collections)
-          return collections
-        })
-        .then(collections =>
-          store.dispatch(actions.receiveCollections(collections))
-        )
+      dropboxSource.cd(path)
+      dropboxSource.listFiles({ filter: entry => entry.name.match(/\.jpg$/) })
+        .then(entries => store.dispatch(actions.receiveCollection(entries)))
+      break
+    
+    case 'RECEIVE_COLLECTION':
+      const entries = action.payload
+      Promise.all(entries.map(entry =>
+          store.dispatch(actions.fetchPreview(entry))
+        ))
       break
   }
 }
