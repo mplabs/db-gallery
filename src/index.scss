@@ -13,3 +13,23 @@
 *::after {
   box-sizing: border-box;
 }
+
+.collection {
+  ul {
+    position: relative;
+    list-style: none;
+  }
+
+  li {
+    opacity: 0;
+    transition: opacity 1000ms ease-in-out;
+
+    &.loaded {
+      opacity: 1;
+    }
+  }
+
+  li > img {
+    position: absolute;
+  }
+}
