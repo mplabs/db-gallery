@@ -1,11 +1,13 @@
 import dropboxEffects from './dropbox'
-import keybardEffects from './keyboard'
+import keyboardEffects from './keyboard'
+import layoutEffects from './layout'
 
 export default store => {
-  keybardEffects(store)
+  keyboardEffects(store)
 
   return next => action => {
     next(action)
     dropboxEffects(store, action)
+    layoutEffects(store, action)
   }
 }

@@ -5,20 +5,28 @@ import actions from '../store/actions'
 
 import Router from 'preact-router'
 import CollectionNavigation from './CollectionNavigation'
-import Home from './Home'
+import ListView from './ListView'
 import Collection from './Collection'
+import FileUpload from './FileUpload'
 
 @connect(store => store, bindActions(actions))
 export default class App extends Component {
 
+  componentDidMount() {
+    
+  }
+
   render({ collections }) {
     return (
-      <div id="app" class="row">
-        <CollectionNavigation />
+      <div id="app" class="container-fluid">
+        <div className="page-header">
+          <h1>ISWI 2017 Photographers Dropoff</h1>
+        </div>
         <Router>
-          <Home path="/" />
+          <ListView path="/" />
           <Collection path="/collection/:path" />
         </Router>
+        {/*<FileUpload />*/}
       </div>
     )
   }

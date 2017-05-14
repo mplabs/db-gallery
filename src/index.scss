@@ -1,15 +1,71 @@
-@import 'global';
-@import 'settings/settings';
-// @import 'typography/typography';
-@import 'foundation';
-
-@include foundation-everything;
-// @include foundation-menu;
-// @include foundation-flex-classes;
-// @include foundation-flex-grid;
+@import "bootstrap";
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+#app {
+  position: absolute;
+  width: 100vw; height: 100vh;
+
+  padding: 20px;
+}
+
+.menu.vertical {
+  li {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    transition: background-color 250ms ease-in-out;
+
+    &:hover {
+      background-color: rgba(0, 121, 255, 0.15);
+    }
+  }
+}
+
+.collection {
+  ul {
+    position: relative;
+    list-style: none;
+  }
+
+  li {
+    opacity: 0;
+    transition: opacity 1000ms ease-in-out;
+
+    &.loaded {
+      opacity: 1;
+    }
+  }
+
+  li > img {
+    position: absolute;
+  }
+}
+
+.file-upload {
+
+  form {
+    position: absolute;
+    top: 0; left: 0; bottom: 0; left: 0;
+    width: 100%;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 5px dashed rgba(255,255,0,0.25);
+
+    &.dragging {
+      background-color: rgba(255,255,0,0.25);
+    }
+  }
+
+  input {
+    display: none;
+  }
 }
