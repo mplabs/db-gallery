@@ -13,12 +13,17 @@ export const dropboxEffects = (store, action) => {
       break
     }
 
+    case 'CREATE_COLLECTION': {
+      const name = action.payload
+
+      dropboxSource.createFolder(name)
+        .then(entry => store.dispatch(action.receiveCollection(entry)))
+      break
+    }
+
     case 'FETCH_COLLECTIONS': {
       const path = action.payload
       dropboxSource.cd(path)
-
-      dropboxSource.readCustomMetadata()
-        .then(metadata => store.dispatch(actions.receiveCollectionMetadata(metadata)))
 
       dropboxSource.listFolders()
         .then(entries => store.dispatch(actions.receiveCollections(entries)))

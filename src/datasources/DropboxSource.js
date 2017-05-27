@@ -123,6 +123,18 @@ export class DropboxSource {
       .then(sortBy('name', 'ASC'))
   }
 
+  createFolder(name) {
+    this.isPushing = true
+
+    return this.dbx.filesCreateFolder({
+      path: join(this.pwd, name),
+      autorename: true
+    }).then(entry => {
+      this.isPushing = false
+      return entry
+    })
+  }
+
   readCustomMetadata() {
     return this.dbx.filesDownload({
       path: join(this.pwd, '.metadata.yml')

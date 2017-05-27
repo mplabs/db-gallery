@@ -8,6 +8,7 @@ import CollectionNavigation from './CollectionNavigation'
 import ListView from './ListView'
 import Collection from './Collection'
 import FileUpload from './FileUpload'
+import Modal from './Modal'
 
 @connect(store => store, bindActions(actions))
 export default class App extends Component {
@@ -22,6 +23,7 @@ export default class App extends Component {
         <div className="page-header">
           <h1>ISWI 2017 Photographers Dropoff</h1>
         </div>
+        <Modal />
         <Router>
           <ListView path="/" />
           <Collection path="/collection/:path" />
