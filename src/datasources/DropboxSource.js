@@ -17,7 +17,6 @@ const sortBy = (key, dir = 'ASC') => entries => {
 export class DropboxSource {
 
   isFetching = false
-  isPushing = false
   didInvalidate = false
   entries = []
 
@@ -63,37 +62,6 @@ export class DropboxSource {
       })
   }
 
-  filesUpload(files) {
-    this.isPushing = true
-    return Promise.all(files.map(file => this.dbx.filesUploadSessionStart({
-      contents: file,
-      close: true
-    }))).then(results => {
-      const entries = results.map((result, idx) => ({
-        cursor: { session_id: result.session_id, offset: files[idx].size },
-        commit: { path: join(this.pwd, files[idx].name) }
-      }))
-      return this.dbx.filesUploadSessionFinishBatch({ entries })
-    }).then(entries => {
-      this.didInvalidate = true;
-    })
-  }
-
-  push(file) {
-    this.isPushing = true
-
-    return this.dbx.filesUpload({
-      contents: file,
-      path: join(this.pwd, file.name),
-      autorename: true,
-      client_modified: file.modified
-    }).then(entry => {
-        this.entries = [...this.entries, entry]
-        this.isPushing = false
-        return this.entries
-      })
-  }
-
   fetchThumbnail(entry) {
     if (entry.thumbnail) {
       return Promise.resolve(entry.thumbnail)
@@ -114,37 +82,13 @@ export class DropboxSource {
 
   listFolders() {
     return this.fetch()
-      .then(filterBy('.tag', 'folder'))
+      .then(filterByTag('.tag', 'folder'))
   }
 
   listFiles() {
     return this.fetch()
       .then(filterBy('.tag', 'file'))
       .then(sortBy('name', 'ASC'))
-  }
-
-  createFolder(name) {
-    this.isPushing = true
-
-    return this.dbx.filesCreateFolder({
-      path: join(this.pwd, name),
-      autorename: true
-    }).then(entry => {
-      this.isPushing = false
-      return entry
-    })
-  }
-
-  readCustomMetadata() {
-    return this.dbx.filesDownload({
-      path: join(this.pwd, '.metadata.yml')
-    }).then(results => {
-      console.log(results)
-      return results
-    }).catch(error => {
-      console.error(error)
-      return
-    })
   }
 }
 

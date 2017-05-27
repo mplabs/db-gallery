@@ -1,8 +1,7 @@
 import { combineReducers } from 'redux'
 
-import * as application from './application'
-import * as collections from './collections'
+import * as collection from './collection'
 
 export default combineReducers(
-  Object.assign({}, application, collections)
+  Object.assign({}, collection)
 )

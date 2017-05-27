@@ -1,6 +1,3 @@
-global.jQuery = require('jquery');
-require('bootstrap-sass')
-
 import './polyfills'
 
 import { h, render } from 'preact'
