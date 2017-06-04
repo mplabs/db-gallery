@@ -3,8 +3,13 @@ export const application = (state = {}, action) => {
 
     case 'INIT': {
       const { basePath } = action.payload
-      return {
-        basePath
+      return { basePath }
+    }
+
+    case 'SET_PAGE_TITLE': {
+      const nextTitle = action.payload || ''
+      if (nextTitle !== document.title) {
+        document.title = nextTitle
       }
     }
 

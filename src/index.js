@@ -15,7 +15,8 @@ store.dispatch(actions.init({
   basePath: '/tmp/iswi-photos',
   layout: {
     showWidows: true
-  }
+  },
+  pageTitle: 'DB Gallery'
 }))
 
 render (
